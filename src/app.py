@@ -5,11 +5,35 @@ A super simple FastAPI application that allows students to view and sign up
 for extracurricular activities at Mergington High School.
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 import os
 from pathlib import Path
+import json
+IDEAS_FILE = os.path.join(current_dir, "ideas.json")
+
+def load_ideas():
+    if not os.path.exists(IDEAS_FILE):
+        return []
+    with open(IDEAS_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def save_ideas(ideas):
+    with open(IDEAS_FILE, "w", encoding="utf-8") as f:
+        json.dump(ideas, f, ensure_ascii=False, indent=2)
+@app.get("/ideas")
+def get_ideas():
+    """Retorna todas as ideias salvas"""
+    return load_ideas()
+
+@app.post("/ideas")
+def add_idea(idea: dict = Body(...)):
+    """Adiciona uma nova ideia"""
+    ideas = load_ideas()
+    ideas.append(idea)
+    save_ideas(ideas)
+    return {"message": "Ideia salva com sucesso", "idea": idea}
 
 app = FastAPI(title="Mergington High School API",
               description="API for viewing and signing up for extracurricular activities")
